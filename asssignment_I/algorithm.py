@@ -33,9 +33,7 @@ def grad_logistic(x, y, theta, N):
     return 1/N * (x.T).dot(-y  + y * sigmoid(np.multiply(y, x.dot(theta))))
 
 def grad_ols(x, y, theta, N):
-    residuals = y - np.dot(x, theta)
-    gradient = -1/N * np.dot(residuals, x)
-    return gradient.T
+    return 2/N * ((x.T).dot(x.dot(theta) - y))
 
 def logistic_loss(x, y, theta, N):
     h_theta = sigmoid(x.dot(theta))
@@ -82,35 +80,37 @@ def sdg(X, y, learning_rate, num_iterations, grad_func=grad_logistic):
 
     return theta
 
-
-def perceptron_train(X, y, learning_rate, num_iterations):
-    m = len(y)
+def perceptron(X, y, learning_rate, num_iterations):
     b = 0
-    theta = np.zeros([X.shape[1], 1])
-    
+    m = len(y)
+    w = np.zeros(X.shape[1])
+
     for i in range(num_iterations):
-            
         print(f'training at iteration: {i}', end='\r')
         rand_ind = np.random.randint(0, m)
-        X_i = X[rand_ind,:].reshape(1, X.shape[1])
-        y_i = y[rand_ind].reshape(1, 1)
+        X_i = X[rand_ind,:]
+        y_i = y[rand_ind]
 
-        z = b + np.dot(theta, )
-        # Misclassification
-        print(z.shape)
-        print(y_i.shape)
+
+        z = np.dot(X_i, w) + b
+
         if y_i * z <= 0:
-            b += learning_rate * y_i
-            theta += np.multiply(learning_rate * y_i, X_i).reshape(theta.shape).T
-                
+            w = w + learning_rate * y_i * X_i
+            b = b + learning_rate * y_i
+
+        # if y_i == 1 and (np.dot(X_i, w) + b) < 0:
+        #     w = w + learning_rate * X_i
+        #     b = b + learning_rate
+        # else:
+        #     w = w - learning_rate * X_i
+        #     b = b - learning_rate
 
     print("training finished")
-        
-            
-    return b, theta
+    
+    return b, w
 
 
-def logistic_prediction(x, theta):
+def prediction(x, theta):
     y_pred = sigmoid(x.dot(theta)) 
     y_class = [1 if i >= 0.5 else -1 for i in y_pred]
     return np.array(y_class)
@@ -120,17 +120,6 @@ def ols_predict(X, theta):
     print(np.dot(X, theta).shape)   
     return np.dot(X, theta)
 
-# def logistic_error(x_train, x_test, y_train, y_test):
-    
-#     train_pred = predict_log(x_train, thetas_train)
-#     test_pred = predict_log(x_test, thetas_train)
-    
-#     log_test_error = y_test - test_pred
-#     log_train_error = log_empirical_risk(len(y_train), train_pred) # empirical error
-    
-#     plt.plot(len(log_test_error), log_test_error)
-
-
 def plot_train_error(losses, title , learning_rate):
     plt.plot(losses)
     plt.xlabel('Number of iterations')
@@ -139,10 +128,21 @@ def plot_train_error(losses, title , learning_rate):
     plt.show()
 
 def evaluate(X, y, theta):
-    y_pred = logistic_prediction(X, theta)
+    y_pred = prediction(X, theta)
     acc = np.sum(y_pred.reshape(y.shape) != y) / len(y)
     return acc
 
+def evaluate1( X_test, y_test, theta, bias):
+    predictions = []
+    
+    for i in range(X_test.shape[0]):
+        activation = np.dot(X_test[i], theta) + bias
+        y_pred = 1 if activation >= 0 else -1
+        predictions.append(y_pred)
+
+    errors = np.sum(np.array(predictions).reshape(y_test.shape) != y_test)
+    return errors / len(y_test)
+    
 
 def train_and_evaluate_logistic(X_train, Y_train, X_test, Y_test):
     learning_rate = 0.01
@@ -162,7 +162,7 @@ def train_and_evaluate_logistic(X_train, Y_train, X_test, Y_test):
 
 
 def train_and_evaluate_OLS(X_train, Y_train, X_test, Y_test):
-    learning_rate = 0.01
+    learning_rate = 0.03
     iterations = [10, 100, 1000, 10000, 100000]
 
 
@@ -178,21 +178,24 @@ def train_and_evaluate_OLS(X_train, Y_train, X_test, Y_test):
         plt.show()
 
 
+
+
 def train_and_evalutate_perceptron(X_train, Y_train, X_test, Y_test):
     learning_rate = 0.01
     iterations = [10, 100, 1000, 10000, 100000]
 
 
     for i in iterations:
-        b, theta = perceptron_train(X_train, Y_train, learning_rate, i)
-        zero_one_err_train = evaluate(X_train, Y_train, theta)
-        print(f'OLS Empirical Error (0-1 loss) for training set at iteration {i}: {zero_one_err_train}')
-        zero_one_err_test = evaluate(X_test, Y_test, theta)
-        print(f'OLS Test 0-1 Error (0-1 loss) for test set at iteration {i}: {zero_one_err_test}')
+        b, theta = perceptron(X_train, Y_train, learning_rate, i)
+        zero_one_err_train = evaluate1(X_train, Y_train, theta, b)
+        print(f'Perceptron Empirical Error (0-1 loss) for training set at iteration {i}: {zero_one_err_train}')
+        zero_one_err_test = evaluate1(X_test, Y_test, theta, b)
+        print(f'Perceptron Test 0-1 Error (0-1 loss) for test set at iteration {i}: {zero_one_err_test}')
         weights_image = theta.reshape(28, 28)
         plt.imshow(weights_image, cmap='gray')
         plt.title('Weights')
         plt.show()
+
 
 def logistic_reg_diff_learning_rates(X_train, Y_train, X_test, Y_test, learning_rates=[1, 0.1, 0.01, 0.001]):
     for rate in learning_rates:
