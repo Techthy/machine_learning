@@ -9,26 +9,6 @@ def sigmoid(z):
     return 1 / (1 + np.exp(-z))
 
 
-def log_empirical_risk(N, y):
-    return 1/N * sum(y)
-
-
-
-def predict(X, theta):
-    print(X.shape)
-    print(theta.shape)
-    z = np.dot(X, theta)
-    print(z.size)
-
-    predictions = np.zeros(z.size)
-
-    for i in range(z.size):
-        predictions[i] = 1 if sigmoid(z[i]) > 0.5 else 0
-    return predictions
-
-def mean_squared_error(y_true, y_pred):
-    return np.mean((y_true - y_pred) ** 2)
-
 def grad_logistic(x, y, theta, N):
     return 1/N * (x.T).dot(-y  + y * sigmoid(np.multiply(y, x.dot(theta))))
 
@@ -98,13 +78,6 @@ def perceptron(X, y, learning_rate, num_iterations):
             w = w + learning_rate * y_i * X_i
             b = b + learning_rate * y_i
 
-        # if y_i == 1 and (np.dot(X_i, w) + b) < 0:
-        #     w = w + learning_rate * X_i
-        #     b = b + learning_rate
-        # else:
-        #     w = w - learning_rate * X_i
-        #     b = b - learning_rate
-
     print("training finished")
     
     return b, w
@@ -152,9 +125,9 @@ def train_and_evaluate_logistic(X_train, Y_train, X_test, Y_test):
     for i in iterations:
         theta = sdg(X_train, Y_train, learning_rate, i, grad_logistic)
         zero_one_err_train = evaluate(X_train, Y_train, theta)
-        print(f'OLS Empirical Error (0-1 loss) for training set at iteration {i}: {zero_one_err_train}')
+        print(f'Logistic Regression Empirical Error (0-1 loss) for training set at iteration {i}: {zero_one_err_train}')
         zero_one_err_test = evaluate(X_test, Y_test, theta)
-        print(f'OLS Test 0-1 Error (0-1 loss) for test set at iteration {i}: {zero_one_err_test}')
+        print(f'Logistic Regression 0-1 Error (0-1 loss) for test set at iteration {i}: {zero_one_err_test}')
         weights_image = theta.reshape(28, 28)
         plt.imshow(weights_image, cmap='gray')
         plt.title('Weights')
@@ -217,32 +190,9 @@ def main():
 
 
     # logistic_reg_diff_learning_rates(X_train, Y_train, X_test, Y_test)
-    # train_and_evaluate_logistic(X_train, Y_train, X_test, Y_test)
-    # train_and_evaluate_OLS(X_train, Y_train, X_test, Y_test)
+    train_and_evaluate_logistic(X_train, Y_train, X_test, Y_test)
+    train_and_evaluate_OLS(X_train, Y_train, X_test, Y_test)
     train_and_evalutate_perceptron(X_train, Y_train, X_test, Y_test)
 
-    # theta = train(X_train, Y_train)
-
-
-
-    # acc = accuracy(Y_train, predict(X_train, theta).reshape(Y_train.shape))
-    # print(f'Accuracy: {acc}')
-
-    # y_pred = predict_log(X_train, theta)
-    # n = 0
-    # for i in range(6000):
-    #     if y_pred[i] != Y_train[i]:
-    #         n += 1
-    # print(n)
-
-    # n = 0
-    # y_pred = predict_log(X_test, theta)
-    # print(y_pred)
-    # print(y_test.reshape(y_pred.shape))
-    
-    # for i in range(750):
-    #     if y_pred[i] != y_test[i]:
-    #         n += 1
-    # print(n)
 
 main()
