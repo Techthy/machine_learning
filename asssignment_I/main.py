@@ -1,8 +1,10 @@
 
 import numpy as np
-from LoadClaus import load_training_dataset, load_test_dataset
+from load import load_training_dataset, load_test_dataset
 import matplotlib.pyplot as plt
-
+from sklearn.metrics import accuracy_score
+from collections import Counter
+from sklearn.metrics import accuracy_score
 
 
 def sigmoid(z):
@@ -181,18 +183,60 @@ def logistic_reg_diff_learning_rates(X_train, Y_train, X_test, Y_test, learning_
         print(f'Test 0-1 Error (0-1 loss) for test set with learning rate {rate}: {zero_one_err_test}')
 
 
+def knn(X_train, y_train, X_test, k):
+    y_train = np.ravel(y_train)
+    predictions = []
+    for i in range(X_test.shape[0]):
+        distances = []
+        for j in range(X_train.shape[0]):
+            distances.append(np.linalg.norm(X_test[i] - X_train[j]))
+        k_neighbors_indices = np.argsort(distances)[:k]
+        k_neighbor_labels = [y_train[i] for i in k_neighbors_indices]
+        most_common = Counter(k_neighbor_labels).most_common(1)
+        predictions.append(most_common[0][0])
+    return np.array(predictions)
+
+def do_knn(X_train, Y_train, X_test, Y_test):
+    k_values = [1, 3, 5, 7, 9, 11, 15]
+    accuracy_scores = []
+    for k in k_values:
+        predictions = knn(X_train, Y_train, X_test, k)
+        acc = accuracy_score(Y_test, predictions)
+        print(f'KNN with k={k} accuracy: {acc}')
+        accuracy_scores.append(acc)
+
+    plt.plot(k_values, accuracy_scores)
+    plt.ylabel('Accuracy')
+    plt.xlabel('K')
+    plt.show()
 
 
+def do_knn_fold(X_train, Y_train, X_test, Y_test):
+    k_values = [1, 3, 5, 7, 9, 11, 15]
+    K = 5
+    n = int(len(Y_train) / K)
+    for k in k_values:
+        acc = 0
+        for i in range(K):
+            X_temp = X_train[i*n:(i+1)*n]
+            Y_temp = Y_train[i*n:(i+1)*n]
+            predictions = knn(X_temp, Y_temp, X_test, k)
+            acc += accuracy_score(Y_test, predictions)
+        print(f'KNN with k={k} and 5-fold accuracy: {acc / K}')
+  
 
 def main():
     X_train, Y_train = load_training_dataset()
     X_test, Y_test = load_test_dataset()
-
-
-    # logistic_reg_diff_learning_rates(X_train, Y_train, X_test, Y_test)
+        
+    
+    logistic_reg_diff_learning_rates(X_train, Y_train, X_test, Y_test)
     train_and_evaluate_logistic(X_train, Y_train, X_test, Y_test)
     train_and_evaluate_OLS(X_train, Y_train, X_test, Y_test)
     train_and_evalutate_perceptron(X_train, Y_train, X_test, Y_test)
+    do_knn(X_train, Y_train, X_test, Y_test)
+    do_knn_fold(X_train, Y_train, X_test, Y_test)
 
 
 main()
+

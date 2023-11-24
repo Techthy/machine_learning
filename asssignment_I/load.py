@@ -29,8 +29,8 @@ def load_training_dataset():
 
     
     YA = np.ones([2000,1])
-    YB = np.zeros([2000,1])
-    YC = np.zeros([2000,1])
+    YB = -np.ones([2000,1])
+    YC = -np.ones([2000,1])
 
     X = np.concatenate((imagesA, imagesB, imagesC),axis=0)
     Y = np.concatenate((YA, YB, YC), axis=0)
@@ -51,8 +51,8 @@ def load_test_dataset():
     imagesC = import_images(pathToTestDataC)
 
     YA = np.ones([250,1])
-    YB = np.zeros([250,1])
-    YC = np.zeros([250,1])
+    YB = -np.ones([250,1])
+    YC = -np.ones([250,1])
 
     X = np.concatenate((imagesA, imagesB, imagesC),axis=0)
     Y = np.concatenate((YA,YB, YC), axis=0)
